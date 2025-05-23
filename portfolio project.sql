@@ -98,27 +98,26 @@ FROM PopvsVac
 -- Using Temp Table to perform Calculation on Partition By in previous query
 
 --DROP Table if exists #PercentPopulationVaccinated
---Create Table #PercentPopulationVaccinated
---(
---Continent nvarchar(255),
---Location nvarchar(255),
---Date datetime,
---Population numeric,
---New_vaccinations numeric,
---RollingPeopleVaccinated numeric
---)
+Create Table #PercentPopulationVaccinated
+(
+Continent nvarchar(255),
+Location nvarchar(255),
+Date datetime,
+Population numeric,
+New_vaccinations numeric,
+RollingPeopleVaccinated numeric
+)
+Insert into #PercentPopulationVaccinated
+SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
+, SUM(CONVERT(float,vac.new_vaccinations)) OVER (Partition by dea.Location Order by dea.location, dea.Date) as RollingPeopleVaccinated
+FROM CovidDeaths dea
+JOIN CovidVaccinations vac
+	ON dea.location = vac.location
+	AND dea.date = vac.date
 
---Insert into #PercentPopulationVaccinated
---SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
---, SUM(CONVERT(float,vac.new_vaccinations)) OVER (Partition by dea.Location Order by dea.location, dea.Date) as RollingPeopleVaccinated
---FROM CovidDeaths dea
---JOIN CovidVaccinations vac
---	ON dea.location = vac.location
---	AND dea.date = vac.date
 
-
---SELECT *, (RollingPeopleVaccinated/NULLIF(Population, 0))*100
---FROM #PercentPopulationVaccinated
+SELECT *, (RollingPeopleVaccinated/NULLIF(Population, 0))*100
+FROM #PercentPopulationVaccinated
 
 
 Create View PercentPopulationVaccinated as
@@ -128,5 +127,5 @@ From CovidDeaths dea
 Join CovidVaccinations vac
 	On dea.location = vac.location
 	and dea.date = vac.date
---where dea.continent is not null 
---order by 2,3
+where dea.continent is not null 
+order by 2,3
